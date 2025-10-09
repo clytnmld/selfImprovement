@@ -124,6 +124,15 @@ router.delete("/:id", async (req, res) => {
     const existing = await prisma.service.findUnique({
       where: { id: Number(id) },
     });
+    const stylistWithService = await prisma.stylist.findFirst({
+      where: {
+        services: {
+          some: {
+            serviceId: Number(id),
+          },
+        },
+      },
+    });
     if (!existing) {
       return res.status(404).json({ message: "Service not found." });
     }
@@ -134,6 +143,15 @@ router.delete("/:id", async (req, res) => {
       return res
         .status(400)
         .json({ message: "Cannot delete service with active bookings." });
+    }
+    if (existing.isDeleted) {
+      return res.status(400).json({ message: "Service already deleted." });
+    }
+    if (stylistWithService?.isDeleted === false) {
+      return res.status(400).json({
+        message:
+          "Cannot delete service assigned to stylists. Please remove the service from stylists first.",
+      });
     }
     const deletedService = await prisma.service.update({
       where: { id: Number(id) },

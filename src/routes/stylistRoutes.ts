@@ -156,6 +156,16 @@ router.put("/:id", async (req, res) => {
         where: { id: { in: serviceIds } },
         select: { id: true },
       });
+      const serviceIsDeleted = await prisma.service.findMany({
+        where: { id: { in: serviceIds }, isDeleted: true },
+        select: { id: true },
+      });
+      if (serviceIsDeleted.length > 0) {
+        const deletedIds = serviceIsDeleted.map((s) => s.id);
+        return res.status(400).json({
+          message: `Service IDs ${deletedIds.join(", ")} already got deleted.`,
+        });
+      }
       if (existingIds.length !== serviceIds.length) {
         const validIds = existingIds.map((s) => s.id);
         const invalidIds = serviceIds.filter((id) => !validIds.includes(id));
