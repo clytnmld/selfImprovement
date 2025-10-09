@@ -1,0 +1,38 @@
+## Setting up
+1. Install dependencies 
+`npm install`
+2. set up DB
+`npx prisma migrate dev --name init`
+`npx prisma generate`
+3. Run the server
+`npm run dev`
+
+## API routes
+1. `/customer` to create customer
+```{
+  "name": "name",
+  "phone" : "08123"
+}```
+2. `/services` to create services
+```
+{
+    "name": "Hair coloring",
+    "duration": 30
+}
+```
+3. `/stylists` to create stylists
+```{
+  "name": "Clayton",
+  "description": "clay stylist",
+  "serviceIds": [12, 13, 14],
+  "shifts": ["09:00-12:00", "13:00-18:00"]
+}```
+4. `/booking` to create bookings
+```{
+  "customerId": 3,
+  "stylistId": 3,
+  "serviceId": 15,
+  "date": "14/10/2025",
+  "startTime": "09:50"
+}```
+`/booking/:id/cancel' to cancel booking
