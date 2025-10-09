@@ -1,8 +1,5 @@
 import express from "express";
-import { stylists } from "../data/stylist";
-import { services } from "../data/services";
 import { Stylist } from "../models/stylist";
-import { bookings } from "../data/booking";
 import prisma from "../prisma";
 
 const router = express.Router();

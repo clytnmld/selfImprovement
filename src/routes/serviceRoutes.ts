@@ -1,8 +1,6 @@
 import express from "express";
 import prisma from "../prisma";
-import { services } from "../data/services";
 import { Service } from "../models/service";
-import { bookings } from "../data/booking";
 
 const router = express.Router();
 
