@@ -26,11 +26,6 @@ function hasOverlappingShifts(shifts: string[]): boolean {
 }
 
 router.get("/", async (req, res) => {
-  // const result = stylists.map((stylist) => ({
-  //   ...stylist,
-  //   services: stylist.serviceIds.map((id) => services.find((s) => s.id === id)),
-  // }));
-  // res.json(result);
   try {
     const result = await prisma.stylist.findMany({
       include: { services: { include: { service: true } }, shifts: true },
@@ -68,7 +63,6 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // Fetch all services that match the provided IDs
     const existingServices = await prisma.service.findMany({
       where: { id: { in: serviceIds } },
       select: { id: true, isDeleted: true },
@@ -174,12 +168,6 @@ router.put("/:id", async (req, res) => {
           .json({ message: `Invalid service IDs: ${invalidIds.join(", ")}` });
       }
     }
-    // if (name !== undefined && name.trim() === '') {
-    //   return res.status(400).json({ message: 'Name cannot be empty.' });
-    // }
-    // if (name) stylist.name = name;
-    // if (description) stylist.description = description;
-    // res.json({ message: 'Stylist updated successfully.', stylist });
     const updatedStylist = await prisma.stylist.update({
       where: { id: Number(id) },
       data: {
@@ -233,7 +221,9 @@ router.delete("/:id", async (req, res) => {
     if (!stylist) {
       return res.status(404).json({ message: "Stylist not found." });
     }
-
+    if (stylist.isDeleted) {
+      return res.status(400).json({ message: "Stylist already deleted." });
+    }
     // Check if stylist has active bookings
     const hasBookings = await prisma.booking.findFirst({
       where: { stylistId: Number(id), status: { not: "canceled" } },

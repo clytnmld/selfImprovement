@@ -25,15 +25,6 @@ router.post("/", async (req, res) => {
   } else if (isNaN(Number(phone))) {
     return res.status(403).json({ message: "phone number must be a number" });
   }
-
-  // const newCustomer: Customer = {
-  //   id: customers.length + 1,
-  //   name,
-  //   phone,
-  // };
-
-  // customers.push(newCustomer);
-  // res.status(201).json(newCustomer);
   try {
     const newCustomer = await prisma.customer.create({
       data: { name, phone },
@@ -50,30 +41,6 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { name, phone } = req.body as Customer;
-
-  // const customer = customers.find((c) => c.id === Number(id));
-  // if (!customer) {
-  //   return res.status(404).json({ message: 'Customer not found.' });
-  // }
-
-  // if (name !== undefined && name.trim() === '') {
-  //   return res.status(400).json({ message: 'Name cannot be empty.' });
-  // }
-
-  // if (phone !== undefined) {
-  //   if (phone.trim() === '') {
-  //     return res.status(400).json({ message: 'Phone number cannot be empty.' });
-  //   } else if (isNaN(Number(phone))) {
-  //     return res
-  //       .status(403)
-  //       .json({ message: 'Phone number must be a number.' });
-  //   }
-  // }
-
-  // if (name) customer.name = name;
-  // if (phone) customer.phone = phone;
-
-  // res.json({ message: 'Customer updated successfully.', customer });
   try {
     const existing = await prisma.customer.findUnique({
       where: { id: Number(id) },
@@ -111,28 +78,6 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
-  // const customerIndex = customers.findIndex((c) => c.id === Number(id));
-
-  // if (customerIndex === -1) {
-  //   return res.status(404).json({ message: 'Customer not found.' });
-  // }
-
-  // const hasBookings = bookings.some(
-  //   (b) => b.customerId === Number(id) && b.status !== 'canceled'
-  // );
-  // if (hasBookings) {
-  //   return res.status(400).json({
-  //     message: 'Cannot delete customer with active or past bookings.',
-  //   });
-  // }
-
-  // // Remove customer from the array
-  // const deletedCustomer = customers.splice(customerIndex, 1)[0];
-
-  // res.json({
-  //   message: 'Customer deleted successfully.',
-  //   customer: deletedCustomer,
-  // });
   try {
     // Check active bookings before deleting
     const hasBookings = await prisma.booking.findFirst({
@@ -142,10 +87,18 @@ router.delete("/:id", async (req, res) => {
       },
     });
 
+    const customer = await prisma.customer.findUnique({
+      where: { id: Number(id) },
+    });
+
     if (hasBookings) {
       return res.status(400).json({
         message: "Cannot delete customer with active bookings.",
       });
+    }
+
+    if (customer?.isDeleted) {
+      return res.status(404).json({ message: "Customer already got deleted" });
     }
 
     const deletedCustomer = await prisma.customer.update({

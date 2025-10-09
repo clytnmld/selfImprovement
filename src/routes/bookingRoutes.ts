@@ -1,8 +1,6 @@
 import express from "express";
 import prisma from "../prisma";
-import { Service } from "../models/service";
 import { Booking } from "../models/booking";
-import { assert } from "console";
 
 const router = express.Router();
 
@@ -18,20 +16,6 @@ function isWithinShift(
 }
 
 router.get("/", async (req, res) => {
-  // const result = bookings.map((booking) => {
-  //   const customer = customers.find((c) => c.id === booking.customerId);
-  //   const stylist = stylists.find((s) => s.id === booking.stylistId);
-  //   const service = services.find((s) => s.id === booking.serviceId);
-
-  //   return {
-  //     ...booking,
-  //     customer,
-  //     stylist: stylist,
-  //     service,
-  //   };
-  // });
-
-  // res.json(result);
   try {
     const result = await prisma.booking.findMany({
       include: {
@@ -95,7 +79,6 @@ router.post("/", async (req, res) => {
       where: { id: serviceId },
     });
 
-    // Check existence + soft delete
     if (!customer || customer.isDeleted)
       return res
         .status(400)
@@ -109,7 +92,6 @@ router.post("/", async (req, res) => {
         .status(400)
         .json({ message: "Cannot book a deleted or non-existent service." });
 
-    // Check if stylist offers the service
     const stylistServiceIds = stylist.services.map((s) => s.serviceId);
     if (!stylistServiceIds.includes(serviceId)) {
       return res.status(400).json({
@@ -117,12 +99,10 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Calculate endTime
     const start = new Date(`1970-01-01T${startTime}:00`);
     const end = new Date(start.getTime() + service.duration * 60000);
     const endTime = end.toTimeString().slice(0, 5);
 
-    // Check shifts
     if (
       !isWithinShift(
         stylist.shifts.map((s) => `${s.startTime}-${s.endTime}`),
@@ -135,7 +115,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Check booking conflict
     const conflict = await prisma.booking.findFirst({
       where: {
         stylistId,
@@ -151,7 +130,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Create booking
     const newBooking = await prisma.booking.create({
       data: {
         customerId,
@@ -178,7 +156,6 @@ router.post("/", async (req, res) => {
 
 router.put("/:id/cancel", async (req, res) => {
   const { id } = req.params;
-  // const booking = bookings.find((b) => b.id === Number(id));
   try {
     const booking = await prisma.booking.findUnique({
       where: { id: Number(id) },
